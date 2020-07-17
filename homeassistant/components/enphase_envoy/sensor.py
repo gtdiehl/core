@@ -2,6 +2,7 @@
 import logging
 
 from envoy_reader.envoy_reader import EnvoyReader
+import httpcore
 import requests
 import voluptuous as vol
 
@@ -154,15 +155,15 @@ class Envoy(Entity):
         elif self._type == "inverters":
             try:
                 inverters = await (self._envoy_reader.inverters_production())
-            except requests.exceptions.HTTPError:
-                _LOGGER.warning(
-                    "Authentication for Inverter data failed during update: %s",
-                    self._envoy_reader.host,
+            except httpcore._exceptions.ProtocolError:
+                _LOGGER.warning("Failed to update inverter SN: %s. "
+                                "Will update next cycle",
+                    self._name.split(" ")[2],
                 )
-
-            if isinstance(inverters, dict):
-                serial_number = self._name.split(" ")[2]
-                self._state = inverters[serial_number][0]
-                self._last_reported = inverters[serial_number][1]
             else:
-                self._state = None
+                if isinstance(inverters, dict):
+                    serial_number = self._name.split(" ")[2]
+                    self._state = inverters[serial_number][0]
+                    self._last_reported = inverters[serial_number][1]
+                else:
+                    self._state = None
