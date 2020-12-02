@@ -53,16 +53,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def hwtest(cloud_id, install_code, ip_address):
     """Try API call 'get_network_info' to see if target device is Legacy or Eagle-200."""
     reader = LeagleReader(cloud_id, install_code, ip_address)
-    response = reader.get_network_info()
+    try:
+        response = reader.get_network_info()
+        _LOGGER.debug("Eagle response: %s", response)
+    except ValueError as error:
+        raise ValueError(error)
 
     # Branch to test if target is Legacy Model
     if "NetworkInfo" in response:
         if response["NetworkInfo"].get("ModelId", None) == "Z109-EAGLE":
+            _LOGGER.debug("Found Eagle Z109")
             return reader
 
     # Branch to test if target is Eagle-200 Model
     if "Response" in response:
         if response["Response"].get("Command", None) == "get_network_info":
+            _LOGGER.debug("Found Eagle-200")
             return EagleReader(ip_address, cloud_id, install_code)
 
     # Catch-all if hardware ID tests fail
@@ -74,6 +80,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     ip_address = config[CONF_IP_ADDRESS]
     cloud_id = config[CONF_CLOUD_ID]
     install_code = config[CONF_INSTALL_CODE]
+
+    _LOGGER.debug(
+        "Setup info: IP Addr(%s) CloudID(%s) InstallCode(%s)",
+        ip_address,
+        cloud_id,
+        install_code,
+    )
 
     try:
         eagle_reader = hwtest(cloud_id, install_code, ip_address)
