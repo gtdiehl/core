@@ -5,7 +5,9 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "ip_address": "IP Address"
+          "ip_address": "IP Address",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },

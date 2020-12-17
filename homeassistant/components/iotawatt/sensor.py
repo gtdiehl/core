@@ -85,3 +85,8 @@ class IOSensor(CoordinatorEntity):
             + str(self._coordinator.data["sensors"][self._ent].getName())
         )
         return name
+
+    @property
+    def unique_id(self):
+        """Return the Uniqie ID for the sensor."""
+        return self._coordinator.data["sensors"][self._ent].getSensorID()

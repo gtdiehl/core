@@ -12,7 +12,9 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "ip_address": "IP Address"
+                    "ip_address": "IP Address",
+                    "password": "Password",
+                    "username": "Username"
                 }
             }
         }

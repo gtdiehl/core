@@ -1,12 +1,12 @@
 """Config flow for iotawatt integration."""
 import logging
 
-from aiohttp import ClientSession
+from httpx import AsyncClient
 from iotawattpy.iotawatt import Iotawatt
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS
+from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
@@ -16,6 +16,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_IP_ADDRESS): str,
+        vol.Optional(CONF_USERNAME, default=""): str,
+        vol.Optional(CONF_PASSWORD, default=""): str,
     }
 )
 
@@ -40,20 +42,14 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    # TODO validate the data can be used to set up a connection.
+    session = AsyncClient()
+    iotawatt = Iotawatt(
+        data["host"], data["ip_address"], session, data["username"], data["password"]
+    )
+    is_connected = await iotawatt.connect()
+    _LOGGER.debug("isConnected: %s", is_connected)
 
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data["username"], data["password"]
-    # )
-    session = ClientSession()
-    iotawatt = Iotawatt(data["host"], data["ip_address"], session)
-    await iotawatt.update()
-    sensors = iotawatt.getSensors()
-    _LOGGER.debug("Sensors: %s", sensors)
-
-    if not sensors:
+    if not is_connected:
         raise CannotConnect
 
     # If you cannot connect:
@@ -62,14 +58,13 @@ async def validate_input(hass: core.HomeAssistant, data):
     # InvalidAuth
 
     # Return info that you want to store in the config entry.
-    return {"title": "Name of the device"}
+    return {"title": data["host"]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for iotawatt."""
 
     VERSION = 1
-    # TODO pick one of the available connection classes in homeassistant/config_entries.py
     # CONNECTION_CLASS = config_entries.CONN_CLASS_UNKNOWN
 
     async def async_step_user(self, user_input=None):

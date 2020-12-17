@@ -1,7 +1,7 @@
 """The iotawatt integration."""
 import asyncio
 
-from aiohttp import ClientSession
+from httpx import AsyncClient
 from iotawattpy.iotawatt import Iotawatt
 import voluptuous as vol
 
@@ -23,8 +23,14 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up iotawatt from a config entry."""
-    session = ClientSession()
-    iotawatt = Iotawatt(entry.data["host"], entry.data["ip_address"], session)
+    session = AsyncClient()
+    iotawatt = Iotawatt(
+        entry.data["host"],
+        entry.data["ip_address"],
+        session,
+        entry.data["username"],
+        entry.data["password"],
+    )
     hass.data[DOMAIN][entry.entry_id] = iotawatt
     await iotawatt.update()
 
