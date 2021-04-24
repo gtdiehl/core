@@ -137,9 +137,10 @@ class Envoy(CoordinatorEntity, SensorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._type != "inverters":
+        if self._type == "battery_storage":
+            value = self.coordinator.data.get(self._type)["wNow"]
+        elif self._type != "inverters":
             value = self.coordinator.data.get(self._type)
-
         elif (
             self._type == "inverters"
             and self.coordinator.data.get("inverters_production") is not None
@@ -173,6 +174,21 @@ class Envoy(CoordinatorEntity, SensorEntity):
                 self._serial_number
             )[1]
             return {"last_reported": value}
+        if self._type == "battery_storage":
+            batt_type = self.coordinator.data.get(self._type)["type"]
+            batt_active_count = self.coordinator.data.get(self._type)["activeCount"]
+            batt_last_update = self.coordinator.data.get(self._type)["readingTime"]
+            batt_wh_now = self.coordinator.data.get(self._type)["whNow"]
+            batt_state = self.coordinator.data.get(self._type)["state"]
+            batt_percent_full = self.coordinator.data.get(self._type)["percentFull"]
+            return {
+                "type": batt_type,
+                "active_count": batt_active_count,
+                "last_update": batt_last_update,
+                "whNow": batt_wh_now,
+                "state": batt_state,
+                "percentCharged": batt_percent_full,
+            }
 
         return None
 

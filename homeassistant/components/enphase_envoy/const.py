@@ -27,4 +27,5 @@ SENSORS = {
     ),
     "lifetime_consumption": ("Lifetime Energy Consumption", ENERGY_WATT_HOUR),
     "inverters": ("Inverter", POWER_WATT),
+    "battery_storage": ("Battery Storage", POWER_WATT),
 }
